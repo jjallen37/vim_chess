@@ -1,0 +1,371 @@
+.ccHelper-wrapper-jja {
+    /* width: 100%;
+    padding: 0 12px;
+    height: 86px;
+    line-height: 46px;
+    border: none;
+    border-radius: 3px;
+    outline: none; */
+    padding: 10px;
+    font-size: 16px;
+    border: 3px solid black;
+    box-sizing: border-box;
+    background: white;
+    position: absolute;
+    display: flex; 
+    justify-content: space-between;
+    height: 86;
+    width: 600px;
+    z-index: 100000;
+    /* top: 0px; */
+    bottom: 0;
+    /* bottom: 30%; */
+}
+
+.ccHelper-item {
+    position:relative;
+    padding-top:20px;
+    display:inline-block;
+}
+
+.ccHelper-notify-badge {
+    position: absolute;
+    right:-20px;
+    top:10px;
+    background:red;
+    text-align: center;
+    border-radius: 30px 30px 30px 30px;
+    color:white;
+    padding:5px 10px;
+    font-size:20px;
+}
+
+.ccHelper-wrapper-right {
+    display: flex; 
+    justify-content: left;
+}
+
+#ccHelper-buffer {
+    text-align: right;
+}
+
+#ccHelper-status-box {
+    font-weight: bold;
+    border-style: solid;
+    padding: 2px;
+}
+
+.ccHelper-wrapper {
+    position: relative;
+    width: 100%;
+    margin-top: 10px;
+}
+
+chess-board .ccHelper-wrapper {
+    position: absolute;
+    top: 100%;
+    margin-top: 60px;
+}
+
+chess-board .ccHelper-wrapper {
+    position: absolute;
+    top: 100%;
+    margin-top: 60px;
+}
+
+.ccHelper-input-status {
+    display: block;
+    width: 20%;
+    color: white;
+    border: 1px;
+    border-radius: 3px;
+    border-color: blue;
+}
+/*
+ * Full selector is provided to deal with
+ * specificity issues
+ */
+input[type="text"].ccHelper-input {
+    display: block;
+    width: 80%;
+    padding: 0 12px;
+    margin: 0;
+    height: 46px;
+    line-height: 46px;
+    border: none;
+    border-radius: 3px;
+    outline: none;
+    font-size: 16px;
+    border: 3px solid transparent;
+    box-sizing: border-box;
+    /* background: white; */
+    background: white;
+    color: #111;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+input[type="text"].ccHelper-input:focus {
+    border-color: #f7ac03;
+}
+
+input[type="text"].ccHelper-input::placeholder {
+    color: #666;
+}
+
+.ccHelper-label {
+    display: none;
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    top: 0;
+    bottom: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 46px;
+    font-size: 16px;
+    color: #666;
+    pointer-events: none;
+    font-weight: normal;
+}
+
+.ccHelper-input:not(:focus):placeholder-shown::placeholder {
+    color: transparent;
+}
+
+.ccHelper-input:not(:focus):placeholder-shown ~ .ccHelper-label  {
+    display: block;
+}
+
+.ccHelper-messages {
+    position: fixed;
+    z-index: 99;
+    width: 300px;
+    top: 20px;
+    right: 20px;
+}
+
+.ccHelper-messagesItem {
+    margin-bottom: 10px;
+    padding: 12px;
+    background: white;
+    border-radius: 3px;
+    border: 3px solid #ddd;
+    font-size: 15px;
+    overflow: hidden;
+}
+
+.ccHelper-blindfold {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    z-index: 100;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: 16px;
+    border-radius: 3px;
+    overflow: hidden;
+    text-align: center;
+    visibility: hidden;
+    opacity: 0;
+}
+
+.ccHelper-docBody--blindfolded .ccHelper-blindfold {
+    visibility: visible;
+    opacity: 1;
+}
+
+.ccHelper-blindfold,
+.ccHelper-blindfold > * {
+    transition: .2s;
+}
+
+.ccHelper-blindfoldPeek {
+    order: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    margin: 0 -16px -16px;
+    height: 25%;
+    max-height: 100px;
+    background: #d8d8d8;
+    border-radius: 3px;
+    color: #333;
+    font-size: 16px;
+    box-sizing: border-box !important;
+}
+
+.ccHelper-blindfoldPeek:hover,
+.ccHelper-blindfoldPeek:hover ~ *,
+.ccHelper-docBody--peeked .ccHelper-blindfoldPeek,
+.ccHelper-docBody--peeked .ccHelper-blindfoldPeek ~ * {
+    opacity: 0;
+    transition-delay: .2s;
+}
+
+.ccHelper-blindfoldPeekContents {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ccHelper-blindfoldKey {
+    display: inline-block;
+    border-radius: 3px;
+    padding: 6px;
+    margin: 0 4px;
+    background: white;
+    font-size: 14px;
+    color: #666;
+    line-height: 1.3;
+    vertical-align: 1px;
+}
+
+.ccHelper-blindfoldTitle {
+    margin: 16px 0;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.ccHelper-blindfoldIcon {
+    flex: 1 1 25%;
+    width: 100%;
+    max-width: 160px;
+    height: auto;
+    margin: 16px 0;
+    align-self: center;
+}
+
+.ccHelper-blindfoldButton {
+    display: block;
+    flex: 0 0 auto;
+    width: 100%;
+    height: 46px;
+    line-height: 46px;
+    margin: 12px 0;
+    padding: 0 12px;
+    color: white;
+    font-size: 16px;
+    background: #f7ac05;
+    border-radius: 3px;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-sizing: border-box !important;
+    -webkit-appearance: none;
+       -moz-appearance: none;
+            appearance: none;
+}
+
+.ccHelper-blindfoldBackground {
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: #f5f5f5;
+}
+
+.ccHelper-autocomplete {
+    display: none;
+    position: absolute;
+    top: 100%;
+    border: 3px solid #979797;
+    background: white;
+    border-radius: 3px;
+}
+
+.ccHelper-autocompleteSuggestions {
+     position: absolute;
+     display: none;
+     z-index: 9999;
+     max-height: 254px;
+     overflow: hidden;
+     overflow-y: auto;
+     margin-top: -46px;
+     transform: translateY(-100%);
+     text-align: left;
+     cursor: default;
+     border: 1px solid #ccc;
+     border-top: 0;
+     background: white;
+     box-sizing: border-box;
+     border-radius: 3px;
+}
+ .ccHelper-autocompleteSuggestion {
+     padding: 10px 16px;
+     line-height: 23px;
+     white-space: nowrap;
+     overflow: hidden;
+     text-overflow: ellipsis;
+     font-size: 16px;
+     color: #333;
+}
+/* matched part of a word */
+ .ccHelper-autocompleteSuggestion b {
+    font-weight: inherit;
+}
+ .ccHelper-autocompleteSuggestion--selected {
+    background: #ffdd90;
+    box-shadow: inset 0 -2px 0 0 #ffdd90;
+}
+
+.ccHelper-customAreas,
+.ccHelper-customArrows {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+}
+
+.ccHelper-board--inited .piece {
+    z-index: 2;
+}
+
+.ccHelper-board--inited .piece.dragging {
+    z-index: 3;
+}
+
+.ccHelper-customArrows {
+    z-index: 4;
+}
+
+.ccHelper-board--inited .promotion-menu {
+    z-index: 5;
+}
+
+/*
+    HACK TO FIX THE BOARD INTERFACE FOR VUE.JS APP
+
+    Vue.js re-rendered the whole board, and made the controls disappear,
+    so we append the controls to an ancestor node instead.
+
+    This change required some styles overrides.
+*/
+
+#live-app {
+    padding-bottom: 64px;
+}
+
+#live-app .main-board-component {
+    align-self: flex-start;
+}
+
+#live-app .sidebar-component {
+    margin-bottom: -49px;
+}
+
+#live-app .ccHelper-wrapper {
+    width: calc(100% - 29px);
+    position: absolute;
+    top: 100%;
+}
