@@ -8,13 +8,17 @@ This project is a fork of the [everonesdesign's](https://github.com/everyonesdes
 
 A small Google Chrome extension adding a Vim-like keyboard navigation experience to [chess.com](https://www.chess.com/) website.
 
+## [Youtube Demo](https://www.youtube.com/watch?v=QYbrvXg3Fhw)
+
+## **This project is currently broken 😓**
+I waited too long to publish this, and now it looks like Chess.com implemented more keyboard controls for emojis. Until I can get that resolved, the demo video might be the only way to see this in action.
+
 # Vim-Like:
 - "Normal mode commands are designed to be typed as a sequence of keystrokes. It’s the Qwerty equivalent of playing a melody on the piano keyboard"
 - Composable Commands
   - Vim: yit => Yank in Tag. 
   - VimChess: cE => Pawn on 3rd rank takes opposite left-side bishop.
   - ChessHelper: c3xB
-
 
 # FAQ:
 Q: Is this necessary:  
