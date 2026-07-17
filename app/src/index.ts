@@ -11,36 +11,26 @@ import {
   bindBlindFoldPeek,
 } from './keyboard';
 import {
+  onDocumentReady,
   isEditable,
   buildMessagesMarkup,
   createInitialElements,
   startUpdatingAriaHiddenElements,
+  markExtentionInit,
 } from './utils';
 import {
   commands,
 } from './commands';
 import {
-} from './vimtypes';
-import {
-  announceMove,
-} from './speech';
+  renderBlindfold,
+} from './blindfold';
 import autocomplete from './lib/autocomplete';
 import { i18n } from './i18n';
-import { useVim, useVim2 } from './vim-start';
-
 
 /**
  * Prepare the extension code and run
  */
 function init() {
-  // const isVim = true;
-  // isVim ? useVim() : useDefault();
-  useVim();
-  // useDefault();
-}
-
-  /// Old code
-function useDefault() {
   const selector = `
     .analysis-diagram .chess_viewer,
     .main-board .board,
@@ -52,73 +42,65 @@ function useDefault() {
     chess-board
   `;
   const boardElement = document.querySelector(selector);
+  if (boardElement) {
+    const {
+      wrapper,
+      input,
+      unfocusedLabel,
+    } = createInitialElements();
 
-  if (!boardElement) {
-    console.log("No board found!");
-    return;
+    bindInputKeyDown(input);
+    bindInputFocus(input);
+    boardElement.appendChild(wrapper);
+    setTimeout(() => input.focus());
+
+    autocomplete({
+      selector: '.ccHelper-input',
+      minChars: 1,
+      source: (term, suggest) => {
+        term = term.toLowerCase();
+        const choices = commands
+          .filter(c => c.isAvailable())
+          .map((c) => `/${c.name}`);
+        suggest(choices.filter((choice) => !choice.toLowerCase().indexOf(term)));
+      },
+    });
+
+    startUpdatingAriaHiddenElements();
+    bindBlindFoldPeek(input);
+
+    document.addEventListener('ccHelper-draw', () => {
+      const board = getBoard();
+      if (board) {
+        drawMovesOnBoard(board, input.value);
+      }
+    });
+
+    input.addEventListener('input', () => {
+      try {
+        const board = getBoard();
+
+        if (board) {
+          drawMovesOnBoard(board, input.value);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    });
+
+    updatePlaceholder(unfocusedLabel);
+    ['focusin', 'focusout'].forEach((e) => {
+      document.addEventListener(
+        e,
+        () => updatePlaceholder(unfocusedLabel)
+      );
+    });
+
+    buildMessagesMarkup();
   }
 
-  const {
-    wrapper,
-    input,
-    unfocusedLabel,
-  } = createInitialElements();
-  boardElement.appendChild(wrapper)
-
-  // bindInputKeyDown(input);
-  // bindInputFocus(input);
-  setTimeout(() => input.focus());
-
-  autocomplete({
-    selector: '.ccHelper-input',
-    minChars: 1,
-    source: (term, suggest) => {
-      term = term.toLowerCase();
-      const choices = map(commands, (v, k) => `/${k}`);
-      suggest(choices.filter((choice) => !choice.toLowerCase().indexOf(term)));
-    },
-  });
-
-  startUpdatingAriaHiddenElements();
-  bindBlindFoldPeek(input);
-
-  document.addEventListener('ccHelper-draw', () => {
-    const board = getBoard();
-    if (board) {
-      drawMovesOnBoard(board, input.value);
-    }
-  }); 
-
-  // input.addEventListener('input', () => {
-  //   try {
-  //     const board = getBoard();
-
-  //     if (board) {
-  //       drawMovesOnBoard(board, input.value);
-  //       initBlindFoldOverlay(board);
-  //     }
-  //   } catch (e) {
-  //     console.error(e);
-  //   }
-  // });
-
-  updatePlaceholder(unfocusedLabel);
-  ['focusin', 'focusout'].forEach((e) => {
-    document.addEventListener(
-      e,
-      () => updatePlaceholder(unfocusedLabel)
-    );
-  });
-
-  buildMessagesMarkup();
-
-  const board = getBoard();
-  if (board) {
-    // Uncomment when "annoounce move" preference will be shipped
-    // board.onMove((move) => announceMove(move));
-  }
-
-  useVim2(input);
+  markExtentionInit();
+  renderBlindfold();
 }
 
 /**
@@ -139,4 +121,7 @@ function updatePlaceholder(unfocusedLabel: HTMLElement) {
   }
 }
 
-setTimeout(init, 500);
+onDocumentReady(() => {
+  setTimeout(init, 500);
+  renderBlindfold();
+});

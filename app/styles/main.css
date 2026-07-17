@@ -1,60 +1,3 @@
-.ccHelper-wrapper-jja {
-    /* width: 100%;
-    padding: 0 12px;
-    height: 86px;
-    line-height: 46px;
-    border: none;
-    border-radius: 3px;
-    outline: none; */
-    padding: 10px;
-    font-size: 16px;
-    border: 3px solid black;
-    box-sizing: border-box;
-    background: white;
-    position: absolute;
-    display: flex; 
-    justify-content: space-between;
-    height: 86;
-    width: 600px;
-    z-index: 100000;
-    /* top: 0px; */
-    bottom: 0;
-    /* bottom: 30%; */
-}
-
-.ccHelper-item {
-    position:relative;
-    padding-top:20px;
-    display:inline-block;
-}
-
-.ccHelper-notify-badge {
-    position: absolute;
-    right:-20px;
-    top:10px;
-    background:red;
-    text-align: center;
-    border-radius: 30px 30px 30px 30px;
-    color:white;
-    padding:5px 10px;
-    font-size:20px;
-}
-
-.ccHelper-wrapper-right {
-    display: flex; 
-    justify-content: left;
-}
-
-#ccHelper-buffer {
-    text-align: right;
-}
-
-#ccHelper-status-box {
-    font-weight: bold;
-    border-style: solid;
-    padding: 2px;
-}
-
 .ccHelper-wrapper {
     position: relative;
     width: 100%;
@@ -67,27 +10,13 @@ chess-board .ccHelper-wrapper {
     margin-top: 60px;
 }
 
-chess-board .ccHelper-wrapper {
-    position: absolute;
-    top: 100%;
-    margin-top: 60px;
-}
-
-.ccHelper-input-status {
-    display: block;
-    width: 20%;
-    color: white;
-    border: 1px;
-    border-radius: 3px;
-    border-color: blue;
-}
 /*
  * Full selector is provided to deal with
  * specificity issues
  */
 input[type="text"].ccHelper-input {
     display: block;
-    width: 80%;
+    width: 100%;
     padding: 0 12px;
     margin: 0;
     height: 46px;
@@ -98,7 +27,6 @@ input[type="text"].ccHelper-input {
     font-size: 16px;
     border: 3px solid transparent;
     box-sizing: border-box;
-    /* background: white; */
     background: white;
     color: #111;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -152,6 +80,19 @@ input[type="text"].ccHelper-input::placeholder {
     border: 3px solid #ddd;
     font-size: 15px;
     overflow: hidden;
+}
+
+/*
+ * Hide the pieces position if the blindfold is on
+ * and the extension is not yet enabled
+ */
+.ccHelper-docHead--blindfolded:not(.ccHelper-docHead--inited) .chessboard,
+.ccHelper-docHead--blindfolded:not(.ccHelper-docHead--inited) .board:not(chess-board),
+.ccHelper-docHead--blindfolded:not(.ccHelper-docHead--inited) chess-board,
+.ccHelper-docHead--blindfolded:not(.ccHelper-docHead--inited) + body .chessboard,
+.ccHelper-docHead--blindfolded:not(.ccHelper-docHead--inited) + body .board:not(chess-board),
+.ccHelper-docHead--blindfolded:not(.ccHelper-docHead--inited) + body chess-board {
+    opacity: .01;
 }
 
 .ccHelper-blindfold {

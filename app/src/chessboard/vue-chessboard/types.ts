@@ -281,7 +281,7 @@ export interface IVueChessboardStore {
     extensions: Record<string, any>
     off: AnyFunction
     on: (event: TChessboardEvent, fn: AnyFunction) => void
-    state: { 
+    state: {
       arrows: any[]
       squares: any[]
       customItems: any[]

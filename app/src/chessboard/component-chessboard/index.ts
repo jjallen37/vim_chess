@@ -2,14 +2,12 @@ import find from 'lodash/find';
 import {
   IChessboard,
   TArea,
-  IMove,
   IMoveDetails,
 } from '../../types';
 import {
   IGame,
   TElementWithGame,
   IMoveEvent,
-  TEventType,
 } from './types';
 import {
   squareToCoords,
@@ -19,23 +17,8 @@ import {
   dispatchPointerEvent,
 } from '../../dom-events';
 
-let events = 
-[
-  'Create' ,
-  'DeletePosition' ,
-  'LineUpdated' ,
-  'Load' ,
-  'ModeChanged' ,
-  'Move' ,
-  'MoveBackward' ,
-  'MoveForward' ,
-  'SelectLineEnd' ,
-  'SelectLineStart' ,
-  'SelectNode' ,
-  'TimeControlUpdated' ,
-  'Undo' ,
-  'UpdateOptions'
-]
+const ERROR_AREA_COLOR = '#ff4444';
+
 /**
  * Chessboard implemented with some kinds of web components
  * Beta in April 2020
@@ -52,30 +35,6 @@ export class ComponentChessboard implements IChessboard {
       const event = new Event('ccHelper-draw');
       document.dispatchEvent(event);
     });
-
-    this.game.on('UpdateOptions', () => {
-      if (!this.game.getPlayingAs) {
-        console.log(`Nobody Playing`)
-        return;
-      }
-      console.log(`Turn: ${this.game.getTurn()}`)
-      console.log(`Playing As: ${this.game.getPlayingAs()}`)
-    });
-
-    // Show events
-    events.forEach(elt => {
-      this.game.on(elt as TEventType, () => {
-        console.log(`ComponentChessboardEvent: ${elt}`)
-      });
-    });
-  }
-
-  highlightLegalMoves() {
-
-  }
-
-  isFlipped() {
-    return this.game.getOptions().flipped;
   }
 
   getElement() {
@@ -88,22 +47,27 @@ export class ComponentChessboard implements IChessboard {
 
   makeMove(fromSq: TArea, toSq: TArea, promotionPiece?: string) {
     const move = { from: fromSq, to: toSq };
-    const fromPosition = this._getSquarePosition(fromSq);
-    const toPosition = this._getSquarePosition(toSq);
-    dispatchPointerEvent(this.element, 'pointerdown', { x: fromPosition.x, y: fromPosition.y });
-    dispatchPointerEvent(this.element, 'pointerup', { x: toPosition.x, y: toPosition.y });
 
-    this.game.move({
-      ...move,
-      promotion: promotionPiece,
-      animate: false
-    });
+    // In case of promotion only interact via JS API
+    if (!promotionPiece) {
+      const fromPosition = this._getSquarePosition(fromSq);
+      const toPosition = this._getSquarePosition(toSq);
+      dispatchPointerEvent(this.element, 'pointerdown', { x: fromPosition.x, y: fromPosition.y });
+      dispatchPointerEvent(this.element, 'pointerup', { x: toPosition.x, y: toPosition.y });
+    }
 
-
-    // When I fire this method it still tries to confirm it for me, so I'll force it like this
-    var confirmButton = document.querySelector(".confirm-move-btnIcon.checkmark") as HTMLElement
-    if (!confirmButton) { return; }
-    confirmButton.click()
+    try {
+      this.game.move({
+        ...move,
+        promotion: promotionPiece,
+        animate: false,
+        userGenerated: true
+      });
+    } catch(e) {
+      // this.game.move throws an error on such a call
+      // not catching the error causes the field not to be cleaned up
+      // @TODO understand why the error is thrown
+    }
   }
 
   isLegalMove(fromSq: TArea, toSq: TArea) {
@@ -111,18 +75,8 @@ export class ComponentChessboard implements IChessboard {
     return Boolean(find(legalMoves, { from: fromSq, to: toSq }));
   }
 
-  isPlayersTurn() : boolean {
-    // Vision is always your turn
-    if (window.location.href.includes("chess.com/vision")){ return true; }
-    if (!this.game.getPlayingAs) {
-      return false;
-    }
-
-    return this.game.getTurn() === this.game.getPlayingAs();
-  }
-
   isPlayersMove() {
-    if (this.game.getOptions().analysis) {
+    if (this.game.getMode().name === 'analysis') {
       return true;
     }
 
@@ -131,23 +85,6 @@ export class ComponentChessboard implements IChessboard {
     }
 
     return this.game.getTurn() === this.game.getPlayingAs();
-  }
-
-  getPlayingAs() {
-    var playingAs = this.game.getPlayingAs!!()
-    if (!playingAs) { return this.game.getTurn() }
-    return this.game.getPlayingAs!!() 
-  }
-
-  getLegalMoves() : IMove[] {
-    return this.game.getLegalMoves().map(x=> {
-      return {
-        to: x.to,
-        from: x.from,
-        piece: x.piece,
-        moveType: ""
-      } as IMove;
-    });
   }
 
   getPiecesSetup() {
@@ -208,7 +145,7 @@ export class ComponentChessboard implements IChessboard {
   markArea(square: TArea) {
     const markings = this.game.getMarkings();
     if (!markings.square[square]) {
-      this.game.toggleMarking({ square: { color: 'd', square }});
+      this.game.toggleMarking({ square: { color: ERROR_AREA_COLOR, square }});
     }
 
     // legacy call, probably can be removed in the future
@@ -222,31 +159,10 @@ export class ComponentChessboard implements IChessboard {
     });
   }
 
-  selectArea(square: TArea) {
-    const pos = this._getSquarePosition(square);
-    dispatchPointerEvent(this.element, 'pointerdown', { x: pos.x, y: pos.y });
-    dispatchPointerEvent(this.element, 'pointerup', { x: pos.x, y: pos.y });
-  }
-
-  unselectArea(square: TArea) {
-    // Click away from anything
-    const pos = this._getSquarePosition(square);
-    dispatchPointerEvent(this.element, 'pointerdown', { x: 0, y: 0 });
-    dispatchPointerEvent(this.element, 'pointerup', { x: 0, y: 0 });
-  }
-
-  targetArea(from: TArea, to: TArea) {
-    this.markArrow(from, to);
-    const selected = this._getSquarePosition(from);
-    const target = this._getSquarePosition(to);
-    dispatchPointerEvent(this.element, 'pointerdown', { x: selected.x, y: selected.y });
-    dispatchPointerEvent(this.element, 'pointermove', { x: target.x, y: target.y });
-  }
-
   unmarkArea(square: TArea) {
     const markings = this.game.getMarkings();
     if (markings.square[square]) {
-      this.game.toggleMarking({ square: { color: 'd', square }});
+      this.game.toggleMarking({ square: { color: ERROR_AREA_COLOR, square }});
     }
 
     // legacy call, probably can be removed in the future
@@ -269,14 +185,6 @@ export class ComponentChessboard implements IChessboard {
   clearAllMarkings() {
     this.clearMarkedAreas();
     this.clearMarkedArrows();
-  }
-
-  onMove(fn: (move: IMoveDetails) => void) : void {
-    this.game.on('Move', (event) => fn(this._getMoveData(event)));
-  }
-
-  onOptionsUpdated(fn: () => void) : void {
-    this.game.on('UpdateOptions', (event) => fn());
   }
 
   submitDailyMove() {

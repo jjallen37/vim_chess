@@ -1,16 +1,8 @@
 import domify from 'domify';
 import {
   ariaHiddenElements,
-  blindfoldOverlays,
 } from './globals';
 import {
-  blindFoldIcon,
-} from './icons';
-import {
-  commands,
-} from './commands';
-import {
-  IChessboard,
   TArea,
   Nullable,
   IConfig,
@@ -20,13 +12,13 @@ import { i18n } from './i18n';
 // value is stored inside of chessboard.rightClickMarkColors
 export const RED_SQUARE_COLOR = '#f42a32';
 
-export function combineStringArrays(a: string[], b: string[]): string[] {
+export function combineStringArrays(a: string[], b: string[]) : string[] {
   const combinations = [];
 
-  for (var i = 0; i < a.length; i++) {
-    for (var j = 0; j < b.length; j++) {
-      combinations.push(`${a[i]}${b[j]}`)
-    }
+  for(var i = 0; i < a.length; i++) {
+       for(var j = 0; j < b.length; j++) {
+          combinations.push(`${a[i]}${b[j]}`)
+       }
   }
 
   return combinations;
@@ -65,10 +57,34 @@ export function postMessage(text: string) {
   }
 }
 
+
+/**
+ * Run callback on document ready
+ * See https://stackoverflow.com/a/989970
+ */
+export function onDocumentReady(fn: () => void) : void {
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+        setTimeout(fn, 1);
+    } else {
+        document.addEventListener("DOMContentLoaded", fn);
+    }
+}
+
+/**
+ * Mark finishing of extension init
+ * Can be used for styles tweaks
+ */
+export const EXTENTION_INITED_BODY_CLASSNAME = 'ccHelper-docBody--inited';
+export const EXTENTION_INITED_HEAD_CLASSNAME = 'ccHelper-docHead--inited';
+export function markExtentionInit() : void {
+  document.head.classList.add(EXTENTION_INITED_HEAD_CLASSNAME);
+  document.body.classList.add(EXTENTION_INITED_BODY_CLASSNAME);
+}
+
 /**
  * Text if passed element can take some text input
  */
-export function isEditable(element: Nullable<Element>): boolean {
+export function isEditable(element: Nullable<Element>) : boolean {
   if (element) {
     return element.matches('input, textarea, [contenteditable]');
   }
@@ -100,9 +116,6 @@ export function isModifierPressed(e: KeyboardEvent) {
 export function createInitialElements() {
   const wrapper = domify(`
     <div class="ccHelper-wrapper">
-      <span
-        class="ccHelper-input-status"
-      >Hello</span>
       <input
         type="text"
         class="ccHelper-input"
@@ -142,67 +155,24 @@ export function startUpdatingAriaHiddenElements() {
 }
 
 /**
- * Create a blindfold overlay for a board element
- */
-export function initBlindFoldOverlay(board: IChessboard) {
-  const existingOverlay = blindfoldOverlays.get(board);
-  if (!existingOverlay) {
-    const container = board.getRelativeContainer();
-    if (container) {
-      if (container) {
-        const overlay = domify(`
-          <div class="ccHelper-blindfold">
-            <div class="ccHelper-blindfoldPeek">
-              <div class="ccHelper-blindfoldPeekContents">
-                ${i18n('blindFoldPeekHint', {
-          key: '<span class="ccHelper-blindfoldKey">Ctrl</span>'
-        })}
-              </div>
-            </div>
-            <div class="ccHelper-blindfoldBackground"></div>
-            <div class="ccHelper-blindfoldTitle">
-              ${i18n('blindFoldOn')}
-            </div>
-            ${blindFoldIcon}
-            <button class="ccHelper-blindfoldButton">
-              ${i18n('blindfoldToggleHint')}
-            </button>
-          </div>
-        `);
-
-        // toggle blindfold mode on button click...
-        const button = overlay.querySelector('.ccHelper-blindfoldButton');
-        if (button) {
-          button.addEventListener('click', () => commands.blindfold());
-        }
-
-        blindfoldOverlays.set(board, overlay);
-        container.appendChild(overlay);
-      } else {
-        // maybe set some dummy value to `blindfoldOverlays` set
-        // to optimise this function?
-      }
-    }
-  }
-}
-
-/**
  * Translate square string to coords
  */
-export function squareToCoords(square: TArea): number[] {
-  const hor = 'abcdefgh'.indexOf(square[0]) + 1;
-  const ver = Number(square[1]);
-  return [hor, ver];
+export function squareToCoords(square: TArea) : number[] {
+  const ver = 'abcdefgh'.indexOf(square[0]) + 1;
+  const hor = Number(square[1]);
+  return [ver, hor];
 }
 
 /**
  * Translate coords string to square
  */
-export function coordsToSquare(coords: string): TArea {
+export function coordsToSquare(coords: string) : TArea {
   const numbers = ['', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   return numbers[Number(coords.slice(1, 2))] + coords.slice(3, 4);
 }
 
-export function getConfig(): IConfig {
-  return (<any>window).chessHelper__environment;
+export function getConfig() : IConfig {
+  return {
+    defaultLocale: 'en',
+  };
 }

@@ -11,12 +11,11 @@ import {
   IChessboard,
   TArea,
   IMoveDetails,
-  IMove
 } from '../../types';
 import {
   TElementWithVueChessboard,
   IVueChessboardStore,
-  IPiece
+  IPiece,
 } from './types';
 
 /**
@@ -68,7 +67,6 @@ export class VueChessboard implements IChessboard {
   makeMove(fromSq: TArea, toSq: TArea, promotionPiece?: string) {
     const [fromFile, fromRank] = squareToCoords(fromSq);
     const [toFile, toRank] = squareToCoords(toSq);
-    var a = this.store;
     this.store.chessboard.emit('MOVE_MADE', {
       from: {
         file: fromFile,
@@ -88,12 +86,6 @@ export class VueChessboard implements IChessboard {
   isLegalMove(fromSq: TArea, toSq: TArea) {
     const {legalMoves} = this.store.chessboard.state;
     return legalMoves.some((m) => m.from === fromSq && m.to === toSq);
-  }
-
-  isPlayersTurn(): boolean
-  {
-    const {playingAs, sideToMove, gameSettings} = this.store.chessboard.state;
-    return playingAs === sideToMove
   }
 
   isPlayersMove() {
@@ -134,35 +126,6 @@ export class VueChessboard implements IChessboard {
     });
 
     return pieces;
-  }
-
-  getPiece(sq: TArea) : string {
-    const [toFile, toRank] = squareToCoords(sq);
-    const findPieceByCoords = (p: IPiece) => p.file === toFile && p.rank === toRank;
-    const cb = this.store.chessboard;
-
-    const piece = cb.state.pieces.find(findPieceByCoords);
-    return `${piece?.type} ${piece?.key} ${piece?.id}`!!;
-  }
-  
-  getLegalMoves() : IMove[] {
-    const cb = this.store.chessboard;
-    return cb.state.legalMoves.map(x=>{
-      return {
-        to: x.to,
-        from: x.from,
-        piece: x.piece,
-        moveType: ""
-      };
-    });
-  }
-
-  highlightLegalMoves() : void {
-    const cb = this.store.chessboard;
-    cb.state.legalMoves.filter(x => x.flags === 1).map(x=>{
-      console.log(`${x.to}-${x.from} - ${x.piece} - ${x.flags} - ${x.san}`)
-      this.markArea(x.to)
-    });
   }
 
   markArrow(fromSq: TArea, toSq: TArea) {
@@ -228,13 +191,12 @@ export class VueChessboard implements IChessboard {
   }
 
   clearMarkedArrows() {
-    this.drawArrows.clear()      
-    // this.drawArrows.each((i, item) => {
-    //   const id = get(item, '0.node.id');
-    //   if (id && id.startsWith('ccHelper-arrow-')) {
-    //     svg.get(id).remove();
-    //   }
-    // });
+    this.drawArrows.each((i, item) => {
+      const id = get(item, '0.node.id');
+      if (id && id.startsWith('ccHelper-arrow-')) {
+        svg.get(id).remove();
+      }
+    });
   }
 
   markArea(square: TArea) {
@@ -251,7 +213,6 @@ export class VueChessboard implements IChessboard {
         x: position.x - squareWidth / 2,
         y: position.y - squareWidth / 2,
         fill: RED_SQUARE_COLOR,
-        // opacity: .5
       });
 
     this.drawAreas.add(rect);
@@ -295,48 +256,6 @@ export class VueChessboard implements IChessboard {
         y: (fromDoc ? top : 0) + squareWidth * coords[1] - correction,
       };
     }
-  }
-
-  onMove(fn: (move: IMoveDetails) => void) : void {
-    this.store._events['chessboard-makeMove'].push((event) => {
-      setTimeout(() => {
-        if (event.isIllegal) return;
-        if (typeof event.from !== 'string') return;
-        if (typeof event.to !== 'string') return;
-
-        const [toFile, toRank] = squareToCoords(event.to);
-        const findPieceByCoords = (p: IPiece) => p.file === toFile && p.rank === toRank;
-        const cb = this.store.chessboard;
-        const piece = cb.state.pieces.find(findPieceByCoords);
-
-        if (piece) {
-          let moveType = 'move';
-          if (cb.state.previousPieces.find(findPieceByCoords)) {
-            moveType = 'capture';
-          } else if (
-            (piece.type === 'k' && event.from === 'e1' && event.to === 'g1') ||
-            (piece.type === 'k' && event.from === 'e8' && event.to === 'g8')
-          ) {
-            moveType = 'short-castling';
-          } else if (
-            (piece.type === 'k' && event.from === 'e1' && event.to === 'c1') ||
-            (piece.type === 'k' && event.from === 'e8' && event.to === 'c8')
-          ) {
-            moveType = 'long-castling';
-          }
-
-          fn({
-            piece: piece.type,
-            from: event.from,
-            to: event.to,
-            promotionPiece: event.promotion ? event.promotion : undefined,
-            moveType,
-            check: this.store.game.setup.check,
-            checkmate: this.store.game.setup.checkmate,
-          });
-        }
-      });
-    });
   }
 
   submitDailyMove() {

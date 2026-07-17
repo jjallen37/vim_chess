@@ -1,18 +1,15 @@
 import filter from 'lodash/filter';
 import isEqual from 'lodash/isEqual';
-import find from 'lodash/find';
 import {
   postMessage,
+  squareToCoords,
 } from './utils';
 import {
   drawCache,
 } from './globals';
 import {
-  parseCommand,
+  getCommandAction,
 } from './commands';
-import {
-  getBoard,
-} from './chessboard';
 import {
   IChessboard,
   TArea,
@@ -20,9 +17,8 @@ import {
   IMoveTemplate,
   IMove,
   TFromTo,
-  TMoveType,
-  Nullable,
 } from './types';
+import { parseMoveInput } from './parse-move';
 import { i18n } from './i18n';
 
 /**
@@ -90,9 +86,9 @@ export function drawMovesOnBoard(board: IChessboard, inputText: string) : void {
  * The function uses active board on the screen if there's any
  */
 export function go(board: IChessboard, input: string) : boolean {
-  const command = parseCommand(input);
-  if (command) {
-    command();
+  const command = getCommandAction(input);
+  if (command && command.isAvailable()) {
+    command.act();
     return true;
   }
 
@@ -138,173 +134,94 @@ export function makeMove(
 /**
  * Get exact from and to coords from move data
  */
-export function getLegalMoves(board: IChessboard, move: Nullable<IMoveTemplate>) : IMove[] {
-  if (!board || !move || !board.isPlayersMove()) {
+export function getLegalMoves(board: IChessboard, potentialMoves: IMoveTemplate[]) : IMove[] {
+  if (!board || !potentialMoves.length || !board.isPlayersMove()) {
     return [];
   }
 
-  if (['short-castling', 'long-castling'].includes(move.moveType)) {
-    return getLegalCastlingMoves(board, move);
-  } else if (['move', 'capture'].includes(move.moveType)) {
+  let legalMoves: IMove[] = [];
+  potentialMoves.forEach((move) => {
+    const toYCoord = squareToCoords(move.to)[1];
+
     const pieces = board.getPiecesSetup();
 
     const matchingPieces = filter(pieces, (p) => {
+      // Treat promotion moves without "promotionPiece" as invalid
+      if (
+        p.type === 'p' &&
+        [1, 8].includes(toYCoord) &&
+        !move.promotionPiece
+      ) {
+        return false;
+      }
+
       return (
+        // RegExp is required, because move.piece/move.from aren't always there
+        // It might be just ".", meaning "any piece" (imagine move like "e2e4")
         new RegExp(`^${move.piece}$`).test(p.type) &&
         new RegExp(`^${move.from}$`).test(p.area) &&
         board.isLegalMove(p.area, move.to)
       );
     });
 
-    return matchingPieces.map((piece) => {
-      return {
+    legalMoves = [
+      ...legalMoves,
+      ...matchingPieces.map((piece) => ({
         ...move,
         from: <TArea>piece.area,
-      };
-    });
-  }
-
-  return [];
-}
-
-/**
- * Get coordinates for castling moves (0-0 and 0-0-0)
- */
-function getLegalCastlingMoves(board: IChessboard, move: IMoveTemplate) : IMove[] {
-  let moves;
-  if (move.moveType === 'short-castling') {
-    moves = [
-      { piece: 'k', from: 'e1', to: 'g1', moveType: 'castling' },
-      { piece: 'k', from: 'e8', to: 'g8', moveType: 'castling' },
+      })),
     ];
-  } else if (move.moveType === 'long-castling') {
-    moves = [
-      { piece: 'k', from: 'e1', to: 'c1', moveType: 'castling' },
-      { piece: 'k', from: 'e8', to: 'c8', moveType: 'castling' },
-    ];
-  }
-
-  if (!moves) {
-    return [];
-  }
-
-  const pieces = board.getPiecesSetup();
-  const legalMoves = moves.filter(({ from , to }) => {
-    return (
-      find(pieces, {type: 'k', area: from}) &&
-      board.isLegalMove(from, to)
-    );
   });
 
-  if (legalMoves.length === 1) {
-    return [legalMoves[0]];
-  }
-
-  return [];
+  return excludeConflictingMoves(pickMostSpecificMoves(legalMoves));
 }
 
 /**
- * Parse message input by user
+ * Exclude moves conflicting between each other for whatever reasons
+ * (some exceptions)
  */
-export function parseMoveInput(input: string) : Nullable<IMoveTemplate> {
-  // return parseCoordinate(input)
-  return parseAlgebraic(input) || parseUCI(input);
-}
-
-// export function parseCoordinate(input: string) : Nullable<IMoveTemplate> {
-//   // const hr = {
-//   //   "a":"a", "s":"b", "d":"c", "f":"d",
-//   //   "j":"e", "k":"f", "l":"g", ";":"h"
-//   // } 
-//   // var str = ""
-//   // for (let i = 0; i < input.length; i++) {
-//   //   str += hr[input.charAt(i)];
-//   // }
-
-// }
-
-/**
- * Parse simplest move format: 'e2e4'
- */
-export function parseUCI(input: string) : Nullable<IMoveTemplate> {
-  const filteredSymbols = input.replace(/( |-)+/g, '');
-  const fromSquare = <TArea>filteredSymbols.slice(0, 2);
-  const toSquare = <TArea>filteredSymbols.slice(2, 4);
-  const promotion = <TPiece>filteredSymbols.slice(4, 5);
-
-  if (validateSquareName(fromSquare) && validateSquareName(toSquare)) {
-    const result: IMoveTemplate = {
-      piece: '.',
-      from: fromSquare,
-      to: toSquare,
-      moveType: 'move',
-    };
-
-    if (promotion) {
-      result.promotionPiece = promotion;
+export function excludeConflictingMoves(moves: IMove[]) : IMove[] {
+  const piecesString = moves.map(m => m.piece).sort().join('');
+  if (piecesString === 'bp') {
+    // Bishop and pawn conflict
+    // Bishop is preferred in this case unless pawn captures
+    // @see https://github.com/everyonesdesign/Chess-Helper/issues/51
+    const pawnMove = moves.find(m => m.piece === 'p') as IMove;
+    const bishopMove = moves.find(m => m.piece === 'b') as IMove;
+    if (pawnMove.from[0] === pawnMove.to[0]) {
+      return [bishopMove];
     }
-
-    return result;
+    return [pawnMove];
+  } else if (piecesString === '.b') {
+    // Bishop and UCI move conflict
+    // UCL is preferred in this case (since multiple bishops sharing same diagonal are extremely rare)
+    // @see e2e test "Moves like `b2b4` prefer UCI over a bishop in conflicts"
+    const uciMove = moves.find(m => m.piece === '.') as IMove;
+    return [uciMove];
   }
 
-  return null;
+  return moves;
 }
 
 /**
- * Extract all possible information from algebraic notation
+ * Sometimes returned moves are essentially the same or similar
+ * This method omits less specific moves
+ * Example1:
+ *   Input: [{ piece: '.', from: 'b4', to: 'b5' }, { piece: 'p', from: 'b4', to: 'b5' }]
+ *   Output: [{ piece: 'p', from: 'b4', to: 'b5' }]
  */
-export function parseAlgebraic(input: string) : Nullable<IMoveTemplate> {
-  // ignore UCI notation
-  if (/^\s*[a-h][1-8][a-h][1-8][rqknb]?\s*$/.test(input)) {
-    return null;
-  }
-
-  const trimmedMove = input.replace(/[\s\-\(\)]+/g, '');
-
-  if (/[o0][o0][o0]/i.test(trimmedMove)) {
-    return {
-      piece: 'k',
-      moveType: 'long-castling',
-      to: '',
-    };
-  } else if (/[o0][o0]/i.test(trimmedMove)) {
-    return {
-      piece: 'k',
-      moveType: 'short-castling',
-      to: '',
-    };
-  }
-
-  const regex = /^([RQKNB])?([a-h])?([1-8])?(x)?([a-h])([1-8])(e\.?p\.?)?(=[QRNBqrnb])?[+#]?$/;
-  const result = trimmedMove.match(regex);
-
-  if (!result) {
-    return null;
-  }
-
-  const [
-    _,
-    pieceName,
-    fromHor,
-    fromVer,
-    isCapture,
-    toHor,
-    toVer,
-    enPassant,
-    promotion,
-  ] = result;
-
-  const piece = <TPiece>(pieceName || 'p').toLowerCase();
-  const move : IMoveTemplate = {
-    piece,
-    moveType: <TMoveType>(isCapture ? 'capture' : 'move'),
-    from: <TArea>`${fromHor || '.'}${fromVer || '.'}`,
-    to: <TArea>`${toHor || '.'}${toVer || '.'}`,
-  };
-
-  if (promotion && piece === 'p') {
-    move.promotionPiece = <TPiece>promotion[1].toLowerCase();
-  }
-
-  return move;
+function pickMostSpecificMoves(moves: IMove[]) : IMove[] {
+  const result: IMove[] = [];
+  const movesDict: Record<string, IMove> = {};
+  moves.forEach(move => {
+    if (!movesDict[move.from + move.to]) {
+      movesDict[move.from + move.to] = move;
+    } else {
+      // Override with the most specific piece
+      if (movesDict[move.from + move.to].piece === '.' && move.piece !== '.') {
+        movesDict[move.from + move.to] = move;
+      }
+    }
+  });
+  return Object.values(movesDict);
 }

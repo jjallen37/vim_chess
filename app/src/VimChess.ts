@@ -1,1 +1,0 @@
-VimChess.ts
