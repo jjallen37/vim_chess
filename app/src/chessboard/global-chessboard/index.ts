@@ -2,11 +2,13 @@ import get from 'lodash/get';
 import {
   RED_SQUARE_COLOR,
   ALL_AREAS,
+  getAllLegalMoves,
 } from '../../utils';
 import {
   Nullable,
   IChessboard,
   TArea,
+  TPiece,
   IMoveDetails,
 } from '../../types';
 import {
@@ -81,6 +83,14 @@ export class GlobalChessboard implements IChessboard {
 
   getPiecesSetup() {
     return get(this.board, 'gameSetup.pieces', []);
+  }
+
+  getPlayingAs() {
+    return this.board._player ?? 1;
+  }
+
+  getLegalMoves() : { from: TArea, to: TArea, piece: TPiece }[] {
+    return getAllLegalMoves(this);
   }
 
   markArrow(fromSq: TArea, toSq: TArea) {

@@ -2,6 +2,7 @@ import find from 'lodash/find';
 import {
   IChessboard,
   TArea,
+  TPiece,
   IMoveDetails,
 } from '../../types';
 import {
@@ -12,6 +13,7 @@ import {
 import {
   squareToCoords,
   ALL_AREAS,
+  getAllLegalMoves,
 } from '../../utils';
 import {
   dispatchPointerEvent,
@@ -95,6 +97,14 @@ export class ComponentChessboard implements IChessboard {
         color: piece.color, type: piece.type, area: piece.square
       }
     }), {});
+  }
+
+  getPlayingAs() {
+    return this.game.getPlayingAs ? this.game.getPlayingAs() : 1;
+  }
+
+  getLegalMoves() : { from: TArea, to: TArea, piece: TPiece }[] {
+    return getAllLegalMoves(this);
   }
 
   markArrow(fromSq: TArea, toSq: TArea) {

@@ -24,6 +24,8 @@ describe('getLegalMoves', function() {
     return {
       isLegalMove: () => true,
       isPlayersMove: () => true,
+      getPlayingAs: () => 1,
+      getLegalMoves: () => [],
       getPiecesSetup: () => pieces,
       getElement: () => document.createElement('div'),
       getRelativeContainer: () => document.createElement('div'),

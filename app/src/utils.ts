@@ -4,8 +4,10 @@ import {
 } from './globals';
 import {
   TArea,
+  TPiece,
   Nullable,
   IConfig,
+  IChessboard,
 } from './types';
 import { i18n } from './i18n';
 
@@ -27,6 +29,27 @@ export function combineStringArrays(a: string[], b: string[]) : string[] {
 export const ALL_FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 export const ALL_RANKS = ['1', '2', '3', '4', '5', '6', '7', '8'];
 export const ALL_AREAS: TArea[] = combineStringArrays(ALL_FILES, ALL_RANKS);
+
+/**
+ * Enumerate every legal move for the current player
+ * by checking each of their pieces against every square on the board
+ */
+export function getAllLegalMoves(board: IChessboard) : { from: TArea, to: TArea, piece: TPiece }[] {
+  const pieces = Object.values(board.getPiecesSetup())
+    .filter((piece) => piece.color === board.getPlayingAs());
+
+  const moves: { from: TArea, to: TArea, piece: TPiece }[] = [];
+
+  pieces.forEach((piece) => {
+    ALL_AREAS.forEach((to) => {
+      if (to !== piece.area && board.isLegalMove(piece.area, to)) {
+        moves.push({ from: piece.area, to, piece: piece.type });
+      }
+    });
+  });
+
+  return moves;
+}
 
 /**
  * Is user holding Ctrl (on PC) or Cmd (on Mac)

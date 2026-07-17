@@ -5,11 +5,13 @@ import {
   coordsToSquare,
   RED_SQUARE_COLOR,
   ALL_AREAS,
+  getAllLegalMoves,
 } from '../../utils';
 import {
   AnyFunction,
   IChessboard,
   TArea,
+  TPiece,
   IMoveDetails,
 } from '../../types';
 import {
@@ -126,6 +128,15 @@ export class VueChessboard implements IChessboard {
     });
 
     return pieces;
+  }
+
+  getPlayingAs() {
+    const {playingAs} = this.store.chessboard.state;
+    return playingAs !== undefined ? playingAs : 1;
+  }
+
+  getLegalMoves() : { from: TArea, to: TArea, piece: TPiece }[] {
+    return getAllLegalMoves(this);
   }
 
   markArrow(fromSq: TArea, toSq: TArea) {

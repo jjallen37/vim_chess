@@ -56,8 +56,12 @@ export function bindInputFocus(input: HTMLInputElement) {
  * Handle keyDown event on the input
  * Responsible for submitting move, backward/forward moves, etc.
  */
-export function bindInputKeyDown(input: HTMLInputElement) {
+export function bindInputKeyDown(input: HTMLInputElement, isDisabled: () => boolean = () => false) {
   input.addEventListener('keydown', (e) => {
+    if (isDisabled()) {
+      return;
+    }
+
     e.stopPropagation();
 
     if (e.keyCode === KEY_CODES.enter) {

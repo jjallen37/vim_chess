@@ -26,6 +26,8 @@ import {
 } from './blindfold';
 import autocomplete from './lib/autocomplete';
 import { i18n } from './i18n';
+import { useVim2 } from './vim-start';
+import { Vim } from './vim';
 
 /**
  * Prepare the extension code and run
@@ -49,10 +51,30 @@ function init() {
       unfocusedLabel,
     } = createInitialElements();
 
-    bindInputKeyDown(input);
+    let vimMode: Vim | null = null;
+
+    bindInputKeyDown(input, () => vimMode !== null);
     bindInputFocus(input);
     boardElement.appendChild(wrapper);
     setTimeout(() => input.focus());
+
+    const vimToggleLabel = document.createElement('label');
+    vimToggleLabel.className = 'ccHelper-vimToggle';
+    const vimToggleCheckbox = document.createElement('input');
+    vimToggleCheckbox.type = 'checkbox';
+    vimToggleLabel.appendChild(vimToggleCheckbox);
+    vimToggleLabel.appendChild(document.createTextNode('Vim mode (experimental)'));
+    wrapper.appendChild(vimToggleLabel);
+
+    vimToggleCheckbox.addEventListener('change', () => {
+      if (vimToggleCheckbox.checked) {
+        vimMode = useVim2(input);
+      } else {
+        vimMode?.stop();
+        vimMode = null;
+        input.value = '';
+      }
+    });
 
     autocomplete({
       selector: '.ccHelper-input',
